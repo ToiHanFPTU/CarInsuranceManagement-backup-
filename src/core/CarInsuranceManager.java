@@ -8,9 +8,8 @@ import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.function.Function;
 
-public class CarInsuranceManager implements Function {
+public class CarInsuranceManager {
 
     public static final String LICENSE_PLATE_ERROR = "Invalid License plate\nInclude a character describing the district code of Ho Chi Minh City (for example, P-Tan Binh, S-Binh Thanh, X-Thu Duc, ...) \nCombined with a digit from 1 to 9, followed by 5 digits";
     public static final String PHONE_NUMBER_ERROR = "Must belong to a valid Vietnamese network operator.\nMust contain exactly 10 digits.";
@@ -285,35 +284,37 @@ public class CarInsuranceManager implements Function {
     }
 
     public void listInsuranceStatements() throws NullPointerException {
-        int no = 1;
-        int year;
-        if (insurances.isEmpty()) {
-            System.out.println("Insurance list if empty");
-            return;
-        }
-        String result = inputter.inputStringAndLoop("Enter year you want to list insurance: ", "Invalid year\nYou just need input year", "^\\d{4}$");
-        try {
-            year = Integer.parseInt(result);
-        } catch (Exception e) {
-            System.out.println("Year must be integer number");
-            return;
-        }
-        insurances.sort(Comparator.comparing(Insurance::getEstablishedDate));
-        System.out.println("Report : INSURANCE STATEMENTS");
-        System.out.println("Sorted by: Established Date");
-        System.out.println("Sort type : ASC ");
-        System.out.println("------------------------------------------------------------------------------------------------------------------------");
-        System.out.println("No. |Insurance Id |Established Date | License plate|       Customer        | Insurance period| Insurance fees");
-        for (Insurance insurance : insurances) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(insurance.getEstablishedDate());
-            int insuranceYear = calendar.get(Calendar.YEAR);
-            if (insuranceYear == year) {
-                System.out.printf("%4d|%-13s|%-17s|%-14s|%-23s|%17d|$%5.2f\n", no, insurance.getInsuranceID(), simpleDateFormat.format(insurance.getEstablishedDate()), insurance.getLicensePlate(), insurance.getInsuranceOwner(), insurance.getInsurancePeriod(), insurance.getInsuranceFees());
+        String confirm;
+        do {
+            int no = 1;
+            int year;
+            if (insurances.isEmpty()) {
+                System.out.println("Insurance list if empty");
+                return;
             }
-            no++;
-        }
-        System.out.println("------------------------------------------------------------------------------------------------------------------------");
+            String result = inputter.inputStringAndLoop("Enter year you want to list insurance: ", "Invalid year\nYou just need input year", "^\\d{4}$");
+            try {
+                year = Integer.parseInt(result);
+            } catch (Exception e) {
+                System.out.println("Year must be integer number");
+                return;
+            }
+            insurances.sort(Comparator.comparing(Insurance::getEstablishedDate));
+            System.out.println("Report : INSURANCE STATEMENTS");
+            System.out.printf("From  :   01/01/%d  To: 12/31/%d\n", year, year);
+            System.out.println("Sorted by: Established Date");
+            System.out.println("Sort type : ASC ");
+            System.out.println("------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("No. |Insurance Id |Established Date | License plate|       Customer        | Insurance period| Insurance fees");
+            for (Insurance insurance : insurances) {
+                if (getYear(insurance.getEstablishedDate()) == year) {
+                    System.out.printf("%4d|%-13s|%-17s|%-14s|%-23s|%17d|$%5.2f\n", no, insurance.getInsuranceID(), simpleDateFormat.format(insurance.getEstablishedDate()), insurance.getLicensePlate(), insurance.getInsuranceOwner(), insurance.getInsurancePeriod(), insurance.getInsuranceFees());
+                }
+                no++;
+            }
+            System.out.println("------------------------------------------------------------------------------------------------------------------------");
+            confirm = inputter.inputStringAndLoop("Do you want to continue with another report(Y/N): ", "Invalid confirm(Y or N)", Acceptable.YES_NO_VALID);
+        } while (confirm.equalsIgnoreCase("y"));
     }
 
     public void reportUninsuredCar() {
@@ -552,9 +553,8 @@ public class CarInsuranceManager implements Function {
         }
         return false;
     }
-
-    @Override
-    public Object apply(Object t) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public int getYear(Date date) {
+        String[] line = (simpleDateFormat.format(date)).split("/");
+        return Integer.parseInt(line[line.length - 1]);
     }
 }
